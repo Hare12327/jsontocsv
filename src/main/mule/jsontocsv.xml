@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="085883ab-7d8a-4051-a260-08243b9d3b54" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="b739d085-64ef-49f2-8159-8f1659788957" >
+		<file:connection workingDir="C:\Users\Hareesh\Desktop\Input" />
+	</file:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="ed52e302-c1f0-4ea6-96e3-e25642e29613" >
+		<file:connection workingDir="C:\Users\Hareesh\Desktop\Output" />
+	</file:config>
+	<flow name="jsontocsvFlow" doc:id="db641753-62ba-466b-ac8d-0ae779cdbf1e" >
+		<http:listener doc:name="Http Listener" doc:id="d839d464-e198-4a2f-9724-7ebd1a2dd2fa" config-ref="HTTP_Listener_config" path="/jsontocsv"/>
+		<logger level="INFO" doc:name="First Check Logger" doc:id="081e1201-081a-44c5-aee2-029dfc714bac" message="The flow get started hear --&gt;"/>
+		<file:read doc:name="Reading the JSON file" doc:id="92fda150-cef2-438f-8701-87ffefe81ed2" config-ref="File_Config" path="empdata.json"/>
+		<ee:transform doc:name="To Convert JSON to CSV" doc:id="690a7969-dc1e-47cb-8282-705aa19274e1">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload.employee filter $.id < 153 map { 
+	EmpId:$.id,
+	EmpName:$.name,
+	EmpSalary:($.salary + $.salary* 3/100),
+	EmpAge: $.age
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Final Check Logger" doc:id="a983e821-9244-4190-b0c5-c437d8db2f68" message="#[payload]"/>
+		<file:write doc:name="To Store CSV file" doc:id="7239bcad-91ba-45fc-95ca-a40f18bda9db" config-ref="File_Config1" path="emp.csv"/>
+	</flow>
+</mule>
